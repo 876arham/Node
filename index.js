@@ -48,7 +48,8 @@ var fs = require('fs');
               j++;
             }
             j=j+23;
-            while(l[j]!='"'){
+            while(l[j]!='"')
+            {
               text=text+l[j];
               j++;
             }
@@ -60,7 +61,8 @@ var fs = require('fs');
             "link":link,
             "text":text
         }
-        fs.writeFile('2pac.txt', stor, (err) => {
+        var val=JSON.stringify(stor,null,4);
+        fs.appendFile('op.json', val, (err) => {
           // throws an error, you could also catch it here
           if (err) throw err;
       
