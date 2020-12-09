@@ -1,5 +1,8 @@
 const p = require('puppeteer');
 var fs = require('fs');
+//const imageDownloader = require('node-image-downloader')
+ 
+
 
 //create a file named mynewfile1.txt:
 
@@ -61,6 +64,27 @@ var fs = require('fs');
             "link":link,
             "text":text
         }
+      
+        const imageDownloader = require('node-image-downloader')
+
+        imageDownloader({
+          imgs: [
+            {
+              uri: link,
+              filename: text
+            }
+            
+          ],
+          dest: './images', //destination folder
+        })
+          .then((info) => {
+            console.log('all done', info)
+          })
+          .catch((error, response, body) => {
+            console.log('something goes bad!')
+            console.log(error)
+          })
+      
         var val=JSON.stringify(stor,null,4);
         fs.appendFile('op.json', val, (err) => {
           // throws an error, you could also catch it here
@@ -78,4 +102,6 @@ var fs = require('fs');
     
     debugger;
     await browser.close();
+    
 })();
+
