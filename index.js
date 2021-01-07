@@ -1,107 +1,170 @@
-const p = require('puppeteer');
-var fs = require('fs');
-//const imageDownloader = require('node-image-downloader')
- 
+async function getDataFromLink(Mlink)  {
 
-
-//create a file named mynewfile1.txt:
-
-
-(async () => {
-
-    let movieurl='https://www.amazon.com/s?i=pantry&srs=7301146011&bbn=8422704011&rh=n%3A8422704011%2Cn%3A%2116310211%2Cn%3A16322721%2Cn%3A11437481011&dc&fst=as%3Aoff&pf_rd_i=8422705011&pf_rd_m=ATVPDKIKX0DER&pf_rd_p=004325cb-0f2a-4ed1-9b2c-cd9efb006271&pf_rd_r=DGK3DP2ABKH0K7PD7JGQ&pf_rd_s=merchandised-search-2&pf_rd_t=101&qid=1564179794&rnid=16322721&ref=PNTRY_OS_OTH_DPSubnavSnacksNuts';
-
+    const p = require('puppeteer');
+    var fs = require('fs');
+    //const imageDownloader = require('node-image-downloader')
+    //create a file named mynewfile1.txt:
+    
+    var final=[];
+    //let Mlink='https://www.amazon.com/b/ref=dp_bc_aui_C_3?ie=UTF8&node=17369013011';
+  
     let browser=await p.launch();
-
+  
     let page=await browser.newPage();
-    await page.goto(movieurl,{waitUntil: 'networkidle2'});
-    var ans;
+    await page.goto(Mlink,{waitUntil: 'networkidle2'});
+    //var ans;
    
-
-    let data=await page.evaluate(()=>{
+  
+  let data=await page.evaluate(()=>{
     
-      // for(var i=1;i<=48;i++){
-        ans=document.querySelectorAll('.s-image-square-aspect');
-        var i=0;
+        var nextLinks=document.getElementsByClassName('a-link-normal a-text-normal');
+        var names=document.getElementsByClassName('a-size-base-plus a-color-base a-text-normal');
+        var v=document.getElementsByClassName('a-row a-size-small');
+        //console.log(names[1].innerText);
+        //console.log(v);
         var out=[];
-        for (i = 0; i < ans.length; i++) {
-            
-            out.push(ans[i].innerHTML)
-          }
+        for(let i=0;i<names.length;i++)
+        {
+            let val={
+                "nextLink":nextLinks[i].href ,
+                "text": names[i].innerText,
+                "clearImageLink":"",
+                "Rating":v[i].innerText,
+                "id":(i+1).toString()
+            }
+            out.push(val);
+        }
         return out;
-       
-       
-        //return ans;
-      
-        
-    });
-    var op=[];
-   
+    })
     
-    for(var i=0;i<data.length;i++){
-        var l=data[i].toString()
-        var link=""
-        var text=""
-        for(var j=0;i<l.length;j++){
-          if(l[j]==='<'){
-            j=j+10;
-            
-            while(l[j]!='"'){
-              link=link+l[j];
-              j++;
-            }
-            j=j+23;
-            while(l[j]!='"')
-            {
-              text=text+l[j];
-              j++;
-            }
-            break;
-          }
-        }
-     
-        let stor={
-            "link":link,
-            "text":text
-        }
-      
-        const imageDownloader = require('node-image-downloader')
-
-        imageDownloader({
-          imgs: [
-            {
-              uri: link,
-              filename: text
-            }
-            
-          ],
-          dest: './images', //destination folder
-        })
-          .then((info) => {
-            console.log('all done', info)
-          })
-          .catch((error, response, body) => {
-            console.log('something goes bad!')
-            console.log(error)
-          })
-      
-        var val=JSON.stringify(stor,null,4);
-        fs.appendFile('op.json', val, (err) => {
-          // throws an error, you could also catch it here
-          if (err) throw err;
-      
-          // success case, the file was saved
-          console.log('Data saved!');
+    console.log(data);
+    console.log("123")
+    
+    //await browser.close();
+    for(let i=0;i<data.length;i++)
+    {
+        let sublink=data[i].nextLink;
+       
+       
+    
+        await page.goto(sublink,{
+          waitUntil: 'networkidle2'
       });
-        op.push(stor); 
-       
-       
-    }
-   
-    console.log(op);
+  
+        let clearImageLink =await page.evaluate(()=>{
+            let ans=document.getElementById('imgTagWrapperId');
+            let val=ans.getElementsByTagName('img');
+            let v=val.landingImage;
+            let e=v.dataset;
+            clearImageLink=e.oldHires;
+            return clearImageLink;
+        })
+        data[i].clearImageLink=clearImageLink;
     
+    
+  
+  
+  
+    const imageDownloader = require('node-image-downloader')
+  
+    imageDownloader({
+      imgs: [
+        {
+          uri: data[i].clearImageLink,
+          filename: (i+1).toString()
+        }
+        
+      ],
+      dest: './images', //destination folder
+    })
+      .then((info) => {
+        console.log('all done', info)
+      })
+      .catch((error, response, body) => {
+        console.log('something goes bad!')
+        console.log(error)
+      })
+     
+  }
+  
+  
+  
     debugger;
     await browser.close();
+    console.log(data);
+    final=data;
+    //console.log("hello");
+    return final;
+  };
+  
+  
+  async function getDataFromCategory(category,subcategory)  {
     
-})();
-
+    
+    const p = require('puppeteer');
+    var fs = require('fs');
+    //const imageDownloader = require('node-image-downloader')
+    //create a file named mynewfile1.txt:
+    
+    var final=[];
+    let Glink='https://www.amazon.com/grocery-breakfast-foods-snacks-organic/b/?ie=UTF8&node=16310101&ref_=topnav_storetab_grocery_sn_fo';
+  
+    let browser=await p.launch();
+  
+    let page=await browser.newPage();
+    await page.goto(Glink,{waitUntil: 'networkidle2'});
+    
+    const catlink=await page.evaluate(function(category){
+      
+       
+       var wrapper=document.getElementById('nav-subnav');
+       var cat=wrapper.getElementsByClassName('nav-a');
+       
+       let out='';
+       
+       for(let i=0;i<cat.length;i++)
+       {  out = out + cat[i].outerText
+           const f = category.localeCompare(cat[i].outerText)
+           
+           if(f===0)
+            { 
+                return cat[i].href
+            }
+       }
+      return -1;
+  
+    },category)
+    
+  
+    await page.goto(catlink,{waitUntil: 'networkidle2'});
+  
+    let sublink=await page.evaluate(function(subcategory){
+       var subcat=document.getElementsByClassName('a-link-normal octopus-pc-category-card-v2-category-link');
+       let out;
+        for(let i=0;i<subcat.length;i++)
+        {
+            if(subcat[i].title===subcategory)
+            {
+                out=subcat[i].href;
+                return out;
+            }
+        }
+     
+      
+  
+     },subcategory)
+     const LastOut = await getDataFromLink(sublink)
+     return LastOut
+  
+  };
+  
+  
+  
+  
+  
+  
+  getDataFromCategory("Breakfast","Cereals").then((a)=>{
+    console.log(a)
+  }).catch((e)=>{
+    console.log(e)
+  });
